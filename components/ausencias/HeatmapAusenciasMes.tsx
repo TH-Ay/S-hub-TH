@@ -182,7 +182,7 @@ export function HeatmapAusenciasMes({ year }: Props) {
                     ) : (
                       <div className="flex flex-col gap-0.5 items-stretch">
                         {tipos.map(({ tipo, dias }) => {
-                          const cfg = COLOR_AUSENCIA[tipo];
+                          const cfg = COLOR_AUSENCIA[tipo] ?? { label: tipo, bg: "#9ca3af" };
                           return (
                             <div
                               key={tipo}
