@@ -1,4 +1,4 @@
-# Manual de Handoff — Staffing Hub (Empresa)
+# Manual de Handoff — Staffing Hub
 
 Este documento existe para que otra persona pueda tomar el rol de mantención/desarrollo de esta app sin depender de quien la creó originalmente. Está pensado para trabajar junto a un asistente de código (Claude Code): con esto debería bastar para pedirle cambios con contexto suficiente.
 
@@ -53,7 +53,7 @@ Un archivo por feature, cada uno con las funciones de lectura/escritura contra S
 
 - **`supabase/migrations/`**: migraciones oficiales vigentes, nombradas `YYYYMMDD_descripcion.sql`. **Esta es la convención a seguir para cualquier cambio de schema nuevo.**
 - **`.sql` sueltos en la raíz de `supabase/`** (`add_*`, `create_*`, `fix_*`, `alter_*`, `drop_*`, `reset.sql`, `seed.sql`): scripts históricos, ya ejecutados sobre la BD real, **no son idempotentes**. `reset.sql` limpia datos transaccionales preservando usuarios; `seed.sql` puebla datos de prueba para desarrollo. No usarlos como referencia de "estado actual del schema", son un log de cómo se llegó hasta acá.
-- **⚠️ Gap importante:** el schema base original (`fase1_schema.sql`, mencionado en `SETUP.md`) **no está dentro de este repositorio** — vive en una carpeta hermana fuera de `staffing-hub`. Si se necesitara reconstruir la BD desde cero, hoy faltaría ese archivo. Recomendación prioritaria: exportar el schema completo actual desde Supabase (`supabase db dump` o el SQL editor) y guardarlo dentro de este repo.
+- **⚠️ Gap importante:** el schema base original (`fase1_schema.sql`, mencionado en `SETUP.md`) **no está dentro de este repositorio** — vive en una carpeta hermana fuera de este repositorio. Si se necesitara reconstruir la BD desde cero, hoy faltaría ese archivo. Recomendación prioritaria: exportar el schema completo actual desde Supabase (`supabase db dump` o el SQL editor) y guardarlo dentro de este repo.
 
 ## 5. Deploy
 
@@ -70,7 +70,7 @@ Un archivo por feature, cada uno con las funciones de lectura/escritura contra S
 
 ## 7. Riesgos/pendientes detectados (prioridad para quien tome el rol)
 
-1. `fase1_schema.sql` fuera del repo — respaldar el schema completo dentro de `staffing-hub`.
+1. `fase1_schema.sql` fuera del repo — respaldar el schema completo dentro de este repositorio.
 2. `lib/types/database.ts` mantenido a mano — evaluar automatizar con `supabase gen types` para evitar desincronización silenciosa.
 3. Feriados de Chile hardcodeados solo hasta 2027 (`lib/constants/holidays.ts`) — agendar actualización anual.
 4. Confirmar si el rol `planificador` (definido en tipos) debe habilitarse como asignable en `lib/auth/actions.ts` (`ROLES_VALIDOS`) o es código muerto.

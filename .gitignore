@@ -40,3 +40,7 @@ next-env.d.ts
 
 # Worktrees temporales de Claude Code
 .claude/worktrees/
+
+# Documentos internos — no subir a GitHub
+AUDITORIA_FUNCIONAL.md
+Auditoria_StaffingHub.docx

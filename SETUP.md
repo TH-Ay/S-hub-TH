@@ -99,7 +99,7 @@ INSERT INTO persona (
   'TU_AUTH_USER_ID',   -- lo encuentras en Authentication → Users
   'Tu Nombre',
   'Tu Apellido',
-  'tu@ejemplo.cl',
+  'tu@correo.cl',
   'admin'
 );
 ```

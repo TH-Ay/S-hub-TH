@@ -138,7 +138,6 @@ export default function SetPasswordPage() {
           <h1 className="text-2xl font-extrabold text-[#1a1a1a]">
             Staffing<span className="text-[#4a90e2]">Hub</span>
           </h1>
-          <p className="text-sm text-[#888] mt-1">Empresa</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-[#e8e8e8] p-8">

@@ -165,7 +165,6 @@ function LoginForm() {
           <h1 className="text-2xl font-extrabold text-[#1a1a1a]">
             Staffing<span className="text-[#4a90e2]">Hub</span>
           </h1>
-          <p className="text-sm text-[#888] mt-1">Empresa</p>
         </div>
 
         {/* Card */}
@@ -196,7 +195,7 @@ function LoginForm() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@ejemplo.cl"
+                    placeholder="tu@correo.cl"
                     required
                     autoComplete="email"
                     className="w-full px-3.5 py-2.5 rounded-lg border border-[#e0e0e0] text-sm focus:outline-none focus:ring-2 focus:ring-[#4a90e2]/40 focus:border-[#4a90e2] transition-colors"
@@ -270,7 +269,7 @@ function LoginForm() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@ejemplo.cl"
+                    placeholder="tu@correo.cl"
                     required
                     autoComplete="email"
                     className="w-full px-3.5 py-2.5 rounded-lg border border-[#e0e0e0] text-sm focus:outline-none focus:ring-2 focus:ring-[#4a90e2]/40 focus:border-[#4a90e2] transition-colors"

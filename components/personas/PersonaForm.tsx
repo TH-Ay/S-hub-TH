@@ -357,7 +357,7 @@ export function PersonaForm({ open, onClose, onSuccess, persona, isAdmin = false
             type="email"
             value={form.email}
             onChange={(e) => set("email")(e.target.value)}
-            placeholder="mgonzalez@ejemplo.cl"
+            placeholder="nombre.apellido@correo.cl"
             error={!!errors.email}
           />
         </FieldWrapper>

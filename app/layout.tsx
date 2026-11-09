@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: {
     template: "%s | Staffing Hub",
-    default: "Staffing Hub — Empresa",
+    default: "Staffing Hub",
   },
   description: "Sistema de gestión de capacidad y staffing",
 };
