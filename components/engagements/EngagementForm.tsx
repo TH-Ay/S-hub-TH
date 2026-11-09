@@ -138,7 +138,7 @@ interface EngagementFormProps {
 
 const EMPTY_ENG = {
   codigo: "", nombre: "", cliente: "", tipo: "proyecto", estado: "activo",
-  descripcion: "", fecha_inicio: "", fecha_fin_estimada: "", industria_id: "",
+  descripcion: "", fecha_inicio: "", fecha_fin_estimada: "", fecha_fin_real: "", industria_id: "",
   capacidades: [] as string[],
   tematicas: [] as string[],
 };
@@ -314,6 +314,8 @@ export function EngagementForm({ open, onClose, onSuccess, engagement, simulatio
           fecha_inicio: engagement.fecha_inicio ?? "",
           // fecha_fin_estimada puede estar ausente en raw de sim_eng_* → fallback a fecha_fin
           fecha_fin_estimada: ((engagement.fecha_fin_estimada ?? (engagement as any).fecha_fin ?? "") as string).slice(0, 10),
+          // El tablero prioriza el fin real sobre el estimado: se muestra para poder verlo y corregirlo
+          fecha_fin_real: (((engagement as any).fecha_fin_real ?? "") as string).slice(0, 10),
           industria_id: engagement.industria_id ?? "",
           capacidades: (ecData ?? []).map((r: any) => r.capacidad_id),
           tematicas: (etData ?? []).map((r: any) => r.tematica_id),
@@ -541,7 +543,7 @@ export function EngagementForm({ open, onClose, onSuccess, engagement, simulatio
 
   // fecha_fin_estimada puede estar vacía si el engagement usa fecha_fin_real
   // Mismo criterio que el resto de la app: primero el fin real, si no el estimado
-  const fechaFinEfectiva = (engagement as any)?.fecha_fin_real || form.fecha_fin_estimada || "";
+  const fechaFinEfectiva = form.fecha_fin_real || form.fecha_fin_estimada || "";
   // Fin permitido para el equipo: incluye el alargue (si no, tras extender no se podía guardar)
   // (considera también los alargues anteriores que no se van a borrar)
   const limiteFinEquipo = [
@@ -627,6 +629,9 @@ export function EngagementForm({ open, onClose, onSuccess, engagement, simulatio
     }
     if (form.fecha_fin_estimada && form.fecha_inicio && form.fecha_fin_estimada < form.fecha_inicio) {
       e.fecha_fin_estimada = "No puede ser anterior a la fecha de inicio";
+    }
+    if (form.fecha_fin_real && form.fecha_inicio && form.fecha_fin_real < form.fecha_inicio) {
+      e.fecha_fin_real = "No puede ser anterior a la fecha de inicio";
     }
     // El contrato debe terminar antes de que empiece el primer alargue (si no, se pisan y el equipo se duplica)
     const iniciosAlargue = [
@@ -793,6 +798,7 @@ export function EngagementForm({ open, onClose, onSuccess, engagement, simulatio
       descripcion: form.descripcion.trim() || null,
       fecha_inicio: form.fecha_inicio || null,
       fecha_fin_estimada: form.fecha_fin_estimada || null,
+      fecha_fin_real: form.fecha_fin_real || null,
       industria_id: form.industria_id || null,
     };
 
@@ -1390,6 +1396,15 @@ export function EngagementForm({ open, onClose, onSuccess, engagement, simulatio
             <Input type="date" value={form.fecha_fin_estimada} onChange={handleFechaFinChange}
               min={form.fecha_inicio || undefined} error={!!errors.fecha_fin_estimada} />
           </FieldWrapper>
+          {engagement && (
+            <FieldWrapper label="Fecha fin real" error={errors.fecha_fin_real}>
+              <Input type="date" value={form.fecha_fin_real} onChange={setField("fecha_fin_real")}
+                min={form.fecha_inicio || undefined} error={!!errors.fecha_fin_real} />
+              <p className="text-[11px] text-[#888] mt-1">
+                Si tiene fecha, el tablero usa esta en vez de la estimada. Déjala vacía si no aplica.
+              </p>
+            </FieldWrapper>
+          )}
         </div>
 
         <FieldWrapper label="Descripción">
