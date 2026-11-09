@@ -1827,6 +1827,14 @@ export function DesgloceEngagements({ onAsignacionChange, onOpenPanel, externalR
               engId: eng.id, label: `Mover "${eng.nombre}"`,
               prevInicio: eng.fecha_inicio, prevFin, finField, deltaDays,
             }]);
+            // Mover el contrato no desplaza sus alargues: si el fin queda encima de uno,
+            // se pisarían y el equipo quedaría duplicado (y el formulario no dejaría guardar)
+            const alargueAlcanzado = eng.extensiones
+              .filter((x) => x.fecha_inicio > prevFin)
+              .some((x) => newFin >= x.fecha_inicio);
+            if (alargueAlcanzado) {
+              avisarErrorDrop("mover el proyecto", { message: "El contrato no puede terminar después de que empiece su alargue. Mueve o acorta primero el alargue." });
+            } else
             // ── SIMULACIÓN: personas y reqs adoptan exactamente las fechas del engagement ──
             if (simulationMode) {
               setEngs((prev) => prev.map((eg) =>
