@@ -21,8 +21,8 @@ import {
 import type { TipoAusencia } from "@/lib/types/database";
 import { useTiposAusencia, TIPOS_AUSENCIA_BASE } from "@/lib/hooks/useTiposAusencia";
 import { PopoverPersona } from "./PopoverPersona";
-import { buscarCruceAusencia, ViajeTooltip } from "./HeatmapAusencias";
-import { esAdmin } from "@/lib/roles";
+import { buscarCruceAusencia, ViajeTooltip, posicionTooltip } from "./HeatmapAusencias";
+import { esAdmin, esTI } from "@/lib/roles";
 import { calculateBusinessDays } from "@/lib/utils/date-utils";
 
 const MESES_CORTO = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -78,7 +78,7 @@ function CeldaTooltip({ celda, persona, fecha, onEliminar, eliminando, onEditar,
   return createPortal(
     <>
       <div className="w-52 rounded-xl bg-white border border-[#e8e8e8] shadow-lg p-3 text-left pointer-events-auto"
-        style={{ position: "fixed", zIndex: 9999, top: anchorRect.top, left: anchorRect.left + anchorRect.width / 2, transform: "translate(-50%, calc(-100% - 8px))" }}>
+        style={posicionTooltip(anchorRect)}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: cfg.bg }}>{cfg.label}</span>
           <div className="flex items-center gap-1">
@@ -587,10 +587,11 @@ export function HeatmapAusenciasSemana({ selectedDate, externalModalOpen = false
                       {/* Columna nombre */}
                       <td className="sticky left-0 z-10 bg-inherit border-r border-[#ebebeb] px-1.5 py-0">
                         <div className="flex items-center gap-1">
-                          {fila.persona.is_leverager && !(rolActual === "GyD" || rolActual === "AySr" || rolActual === "planificador" || rolActual === "Desarrollo") && (
+                          {/* A y R ocultas también para TI */}
+                          {fila.persona.is_leverager && !esTI(rolActual) && !(rolActual === "GyD" || rolActual === "AySr" || rolActual === "planificador" || rolActual === "Desarrollo") && (
                             <span className="w-4 h-4 rounded-full bg-[#3b5bdb] flex-shrink-0 flex items-center justify-center text-white font-black leading-none" style={{ fontSize: 8 }}>A</span>
                           )}
-                          {esAdmin(rolActual) && fila.persona.referente && (
+                          {esAdmin(rolActual) && !esTI(rolActual) && fila.persona.referente && (
                             <span className="w-4 h-4 rounded-full bg-[#e2884a] flex-shrink-0 flex items-center justify-center text-white font-black leading-none" style={{ fontSize: 8 }}>R</span>
                           )}
                           <div className="min-w-0 flex-1 overflow-hidden">

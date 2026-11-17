@@ -6,7 +6,7 @@ import { COLOR_AUSENCIA, isHoliday } from "@/lib/queries/ausencias";
 import { calculateBusinessDays } from "@/lib/utils/date-utils";
 import type { TipoAusencia } from "@/lib/types/database";
 import { PopoverPersona } from "./PopoverPersona";
-import { esAdmin } from "@/lib/roles";
+import { esAdmin, esTI } from "@/lib/roles";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -395,7 +395,8 @@ export function HeatmapTrimestral({ year, startMonth, personasData, ausenciasDat
                       <td className={`sticky left-0 z-20 bg-white border-r border-[#ebebeb] px-1 py-0 ${PERSONA_CLS}`}>
                         <div className="flex items-center gap-0.5 min-w-0">
                           {/* Misma regla que Mes y Semana: estos roles no ven la insignia "A" */}
-                          {p.is_leverager && !ocultarPopoverPersona && (
+                          {/* A y R ocultas también para TI */}
+                          {p.is_leverager && !ocultarPopoverPersona && !esTI(rolActual) && (
                             <span
                               className="w-3 h-3 rounded-full bg-[#3b5bdb] flex-shrink-0 flex items-center justify-center text-white font-black leading-none"
                               style={{ fontSize: 6 }}
@@ -404,7 +405,7 @@ export function HeatmapTrimestral({ year, startMonth, personasData, ausenciasDat
                               A
                             </span>
                           )}
-                          {esAdmin(rolActual) && p.referente && (
+                          {esAdmin(rolActual) && !esTI(rolActual) && p.referente && (
                             <span
                               className="w-3 h-3 rounded-full bg-[#e2884a] flex-shrink-0 flex items-center justify-center text-white font-black leading-none"
                               style={{ fontSize: 6 }}

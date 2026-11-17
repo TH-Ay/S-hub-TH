@@ -41,7 +41,8 @@ function DescargableCard({ titulo, descripcion, botonLabel, loading, onDescargar
   );
 }
 
-export function DescargablesClient() {
+/** ocultarInfoPersonas: rol TI no descarga datos sensibles de personas */
+export function DescargablesClient({ ocultarInfoPersonas = false }: { ocultarInfoPersonas?: boolean }) {
   const anio = new Date().getFullYear();
   const [loadingPersonas, setLoadingPersonas] = useState(false);
   const [loadingStaffing, setLoadingStaffing] = useState(false);
@@ -78,6 +79,7 @@ export function DescargablesClient() {
       )}
 
       <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+        {!ocultarInfoPersonas && (
         <DescargableCard
           titulo={`Info personas ${anio}`}
           descripcion="Respaldo consolidado de información de personas"
@@ -87,6 +89,7 @@ export function DescargablesClient() {
             descargar("/api/reportes/personas-resguardo-excel", "Info personas.xlsx", setLoadingPersonas)
           }
         />
+        )}
         <DescargableCard
           titulo={`Respaldo Staffing ${anio}`}
           descripcion="Resguardo y desglose de engagements, asignaciones y proyectos"

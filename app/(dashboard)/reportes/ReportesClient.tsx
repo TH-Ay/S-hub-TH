@@ -8,7 +8,7 @@ import { TalentMatrixPreview } from "@/components/reportes/TalentMatrixPreview";
 import { ResumenProyectosPreview } from "@/components/reportes/ResumenProyectosPreview";
 import { createClient, createAnyClient } from "@/lib/supabase/client";
 import type { RolSistema } from "@/lib/types/database";
-import { esAdmin } from "@/lib/roles";
+import { esAdmin, esTI } from "@/lib/roles";
 
 const REPORTES = [
   {
@@ -39,6 +39,8 @@ const REPORTES = [
     iconColor: "#0ea5e9",
     iconBg: "bg-[#f0fbff]",
     href: "/reportes/capacity-proyectos",
+    // TI no ve reportes de capacity
+    allowedRoles: ["admin", "personas", "proposer"] as RolSistema[],
   },
   {
     id: "capacity-snapshot",
@@ -48,6 +50,8 @@ const REPORTES = [
     iconColor: "#0ea5e9",
     iconBg: "bg-[#f0fbff]",
     href: "/reportes/capacity-snapshot",
+    // TI no ve la dotación por mes
+    allowedRoles: ["admin", "personas", "proposer"] as RolSistema[],
   },
 ];
 
@@ -78,7 +82,8 @@ export function ReportesClient() {
         <span className="text-[11px] text-gray-400 font-medium">
           {reportesVisibles.length} {reportesVisibles.length === 1 ? "módulo disponible" : "módulos disponibles"}
         </span>
-        {esAdmin(rol) && (
+        {/* TI no ve Descargables */}
+        {esAdmin(rol) && !esTI(rol) && (
           <Link
             href="/reportes/descargables"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f0fdf4] hover:bg-[#dcfce7] transition-colors text-[12px] font-semibold text-[#16a34a]"

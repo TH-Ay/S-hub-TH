@@ -28,12 +28,12 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { esAdmin, ROLES_ADMIN } from "@/lib/roles";
+import { esAdmin, esTI, ROLES_ADMIN } from "@/lib/roles";
 import type { Persona, RolSistema } from "@/lib/types/database";
 
 // Debe coincidir con los roles que ofrece Accesos: faltaba "planificador" y dar acceso con
 // ese rol siempre fallaba con "Rol inválido"
-const ROLES_VALIDOS: RolSistema[] = ["admin", "personas", "GyD", "AySr", "Desarrollo", "planificador", "proposer"];
+const ROLES_VALIDOS: RolSistema[] = ["admin", "personas", "TI", "GyD", "AySr", "Desarrollo", "planificador", "proposer"];
 
 export interface ResultadoAccion {
   ok: boolean;
@@ -168,7 +168,11 @@ export async function otorgarAcceso({
   rol: RolSistema;
   origin: string;
 }): Promise<ResultadoAccion> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  // TI no puede agregar accesos nuevos
+  if (esTI(admin.rol)) {
+    return { ok: false, message: "El rol TI no puede agregar accesos." };
+  }
 
   if (!ROLES_VALIDOS.includes(rol)) {
     return { ok: false, message: "Rol inválido." };
@@ -266,6 +270,10 @@ export async function cambiarRol({
 
   if (!ROLES_VALIDOS.includes(rol)) {
     return { ok: false, message: "Rol inválido." };
+  }
+  // TI no puede cambiar su propio rol (ni subirse a Admin/Personas)
+  if (personaId === admin.persona.id && esTI(admin.rol)) {
+    return { ok: false, message: "El rol TI no puede cambiar su propio rol." };
   }
   if (personaId === admin.persona.id && !esAdmin(rol)) {
     return {

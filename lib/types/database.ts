@@ -13,7 +13,7 @@
 //  ENUMS / literales del dominio
 // ─────────────────────────────────────────────────────────────
 
-export type RolSistema = "admin" | "personas" | "GyD" | "AySr" | "Desarrollo" | "proposer" | "planificador";
+export type RolSistema = "admin" | "personas" | "TI" | "GyD" | "AySr" | "Desarrollo" | "proposer" | "planificador";
 
 /**
  * Ciclo de vida del acceso al sistema de una persona.

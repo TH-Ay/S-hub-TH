@@ -6,6 +6,7 @@ import { ModalNuevoViaje } from "@/components/ausencias/ModalNuevoViaje";
 import { fetchViajesRango, type ViajeDia } from "@/lib/queries/ausencias";
 import { createClient, createAnyClient } from "@/lib/supabase/client";
 import type { RolSistema } from "@/lib/types/database";
+import { esTI } from "@/lib/roles";
 import { HeatmapAusencias } from "@/components/ausencias/HeatmapAusencias";
 import { HeatmapTrimestral, type PersonaTrimestral, type AusenciaTrimestral } from "@/components/ausencias/HeatmapTrimestral";
 import { HeatmapAusenciasSemana } from "@/components/ausencias/HeatmapAusenciasSemana";
@@ -243,7 +244,8 @@ export function AusenciasClient({ isAdmin = false }: AusenciasClientProps) {
 
           {/* Acciones */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {isAdmin && (
+            {/* TI no ve ni usa el botón de métricas */}
+            {isAdmin && !esTI(rol) && (
               <button
                 onClick={() => setShowMetrics((s) => !s)}
                 title={showMetrics ? "Ocultar métricas" : "Mostrar métricas"}
@@ -252,7 +254,8 @@ export function AusenciasClient({ isAdmin = false }: AusenciasClientProps) {
                 {showMetrics ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
             )}
-            {rol !== "planificador" && rol !== "GyD" && rol !== "AySr" && (
+            {/* TI tampoco ve el resumen de vacaciones */}
+            {rol !== "planificador" && rol !== "GyD" && rol !== "AySr" && !esTI(rol) && (
               <button
                 onClick={() => setResumenOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e0e0e0] hover:bg-[#f5f5f5] rounded-lg text-[12px] font-semibold text-[#555] transition-colors"
@@ -339,7 +342,7 @@ export function AusenciasClient({ isAdmin = false }: AusenciasClientProps) {
               onExternalModalClose={() => setModalOpen(false)}
               readOnly={isReadOnly}
               rolActual={rol}
-              showMetrics={showMetrics}
+              showMetrics={showMetrics && !esTI(rol)}
               recargarKey={recargarKey}
             />
           )}
@@ -383,7 +386,7 @@ export function AusenciasClient({ isAdmin = false }: AusenciasClientProps) {
 
       {/* ── Panel resumen vacaciones ─────────────────────────────── */}
       <ResumenVacaciones
-        open={resumenOpen}
+        open={resumenOpen && !esTI(rol)}
         onClose={() => setResumenOpen(false)}
       />
 

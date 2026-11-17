@@ -89,6 +89,29 @@ interface TooltipProps {
   tiposDinamicos?: { id: string; label: string; color_bg: string; color_text: string }[];
 }
 
+/**
+ * Posición del popup de una celda, siempre dentro de la pantalla.
+ * Ancho fijo w-52 (208px). Cerca de los bordes izquierdo/derecho se corre
+ * hacia adentro; si no cabe arriba de la celda, se muestra abajo.
+ */
+const TOOLTIP_W = 208;
+const TOOLTIP_H_APROX = 130;
+const MARGEN = 8;
+export function posicionTooltip(anchorRect: DOMRect): React.CSSProperties {
+  const centro = anchorRect.left + anchorRect.width / 2;
+  const min = TOOLTIP_W / 2 + MARGEN;
+  const max = window.innerWidth - TOOLTIP_W / 2 - MARGEN;
+  const left = Math.min(Math.max(centro, min), Math.max(min, max));
+  const abajo = anchorRect.top < TOOLTIP_H_APROX + MARGEN * 2;
+  return {
+    position: "fixed",
+    zIndex: 9999,
+    top: abajo ? anchorRect.bottom : anchorRect.top,
+    left,
+    transform: abajo ? "translate(-50%, 8px)" : "translate(-50%, calc(-100% - 8px))",
+  };
+}
+
 function CeldaTooltip({ celda, persona, fecha, onEliminar, eliminando, onEditar, onCerrar, anchorRect, readOnly = false, tiposDinamicos = [] }: TooltipProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Busca primero en BD dinámica, luego en la paleta estática, fallback gris
@@ -107,13 +130,7 @@ function CeldaTooltip({ celda, persona, fecha, onEliminar, eliminando, onEditar,
     {/* Se oculta mientras está abierto el diálogo de confirmación (evita superposición) */}
     {!confirmOpen && <div
       className="w-52 rounded-xl bg-white border border-[#e8e8e8] shadow-lg p-3 text-left pointer-events-auto"
-      style={{
-        position: "fixed",
-        zIndex: 9999,
-        top: anchorRect.top,
-        left: anchorRect.left + anchorRect.width / 2,
-        transform: "translate(-50%, calc(-100% - 8px))",
-      }}
+      style={posicionTooltip(anchorRect)}
     >
       {/* Tipo badge */}
       <div className="flex items-center justify-between mb-2">
@@ -201,13 +218,7 @@ export function ViajeTooltip({ viaje, persona, onEliminar, eliminando, onCerrar,
     {/* Se oculta mientras está abierto el diálogo de confirmación (evita superposición) */}
     {!confirmOpen && <div
       className="w-52 rounded-xl bg-white border border-[#e8e8e8] shadow-lg p-3 text-left pointer-events-auto"
-      style={{
-        position: "fixed",
-        zIndex: 9999,
-        top: anchorRect.top,
-        left: anchorRect.left + anchorRect.width / 2,
-        transform: "translate(-50%, calc(-100% - 8px))",
-      }}
+      style={posicionTooltip(anchorRect)}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white bg-indigo-600">
