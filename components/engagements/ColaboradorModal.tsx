@@ -9,6 +9,7 @@ import { getDetailedPersonAbsences } from "@/lib/queries/ausencias";
 import { ProyectosPersonaDetalle } from "@/components/personas/ProyectosPersonaDetalle";
 import { TalentMatrix, getTalentBoxName } from "@/components/personas/TalentMatrix";
 import type { Persona } from "@/lib/types/database";
+import { esTI } from "@/lib/roles";
 import { armarTramos, cruzaPausa, finPermitido, inicioPermitido, pausasEntre, tramoDePeriodo, type ExtensionBasica, type Tramo } from "./tramosEngagement";
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -105,6 +106,16 @@ export function ColaboradorModal({
   const [perfilCargado, setPerfilCargado] = useState(false);
   const [showAusencias, setShowAusencias] = useState(false);
   const [showMatriz, setShowMatriz] = useState(false);
+  // Rol del usuario actual: TI no ve talento, disponibilidad ni tiempo en la empresa
+  const [ocultarTalento, setOcultarTalento] = useState(true);
+  useEffect(() => {
+    const sb = createAnyClient();
+    sb.auth.getUser().then(async ({ data: { user } }: { data: { user: { id: string } | null } }) => {
+      if (!user) return;
+      const { data } = await sb.from("persona").select("rol_sistema").eq("auth_user_id", user.id).single();
+      setOcultarTalento(esTI(data?.rol_sistema));
+    });
+  }, []);
 
   // ── Carga Tab 1 al montar ─────────────────────────────────────
   useEffect(() => {
@@ -528,7 +539,8 @@ export function ColaboradorModal({
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-[#1a1a2e] text-sm">{persona.nombre} {persona.apellido}</p>
                       <p className="text-[11px] text-gray-400">{persona.cargo_actual ?? "Sin cargo"}</p>
-                      {diasEnEmpresa(persona.fecha_ingreso) && (
+                      {/* TI no ve el tiempo en la empresa */}
+                      {!ocultarTalento && diasEnEmpresa(persona.fecha_ingreso) && (
                         <p className="text-[10px] text-gray-400 mt-0.5">
                           ⌛ {diasEnEmpresa(persona.fecha_ingreso)} en la empresa
                         </p>
@@ -541,7 +553,8 @@ export function ColaboradorModal({
                     )}
                   </div>
 
-                  {/* Disponibilidad */}
+                  {/* Disponibilidad (oculta para TI) */}
+                  {!ocultarTalento && (
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-xs">Disponibilidad</span>
                     <span
@@ -555,6 +568,7 @@ export function ColaboradorModal({
                       {Math.max(0, 100 - resumen.ocupacion)}% libre
                     </span>
                   </div>
+                  )}
 
                   {/* Nº proyectos */}
                   <div className="flex justify-between items-center">
@@ -630,7 +644,7 @@ export function ColaboradorModal({
                   </div>
 
                   {/* Talent Matrix */}
-                  {(persona.talento_potencial != null || persona.talento_desempeno != null) && (
+                  {!ocultarTalento && (persona.talento_potencial != null || persona.talento_desempeno != null) && (
                     <div className="flex flex-col gap-2">
                       <button
                         onClick={() => setShowMatriz((s) => !s)}

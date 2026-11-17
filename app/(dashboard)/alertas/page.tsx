@@ -1,11 +1,12 @@
 import { requireAuth } from "@/lib/auth";
+import { esAdmin } from "@/lib/roles";
 import { AlertasPanel } from "@/components/alertas/AlertasPanel";
 import { RecordatorioFeriados } from "@/components/alertas/RecordatorioFeriados";
 
 export default async function AlertasPage() {
   const { persona, rol } = await requireAuth();
   // El recordatorio de feriados es solo para quienes administran el calendario
-  const veSoporte = rol === "admin" || rol === "personas";
+  const veSoporte = esAdmin(rol);
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-2xl space-y-6">

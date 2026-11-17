@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Grid2X2, AlertCircle } from "lucide-react";
 import { createAnyClient } from "@/lib/supabase/client";
@@ -90,14 +90,67 @@ function toCoords(desempeno: number, potencial: number) {
   const y = 5 + ((potencial  - 1) / 4) * 90;
   return { x, y };
 }
-/** Jitter determinista por ID para evitar solapamiento exacto */
-function jitter(id: string): { dx: number; dy: number } {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffffffff;
-  return {
-    dx: (((h & 0xff)       / 255) - 0.5) * 5,
-    dy: ((((h >> 8) & 0xff) / 255) - 0.5) * 5,
+/** Radio del badge (w-7 = 28px) + ring-2 (2px) */
+const BADGE_R = 16;
+/** Distancia mínima entre centros: dos radios + 2px de aire */
+const MIN_DIST = BADGE_R * 2 + 2;
+/** Espacio reservado arriba de cada celda para su título */
+const TITLE_PAD = 22;
+
+/**
+ * Calcula la posición en píxeles de cada badge sin que se toquen.
+ * 1) Parte de la coordenada real (puntaje).
+ * 2) Empuja los círculos que chocan hasta separarlos (varias pasadas).
+ * 3) Cada badge queda siempre dentro de su celda del 9-box, para no
+ *    mostrar a nadie en una categoría que no es la suya.
+ */
+function calcularPosiciones(
+  lista: { id: string; talento_desempeno: number | null; talento_potencial: number | null }[],
+  w: number,
+  h: number,
+) {
+  const cw = w / 3, ch = h / 3;
+  const nodos = [...lista].sort((a, b) => a.id.localeCompare(b.id)).map((p, i) => {
+    const des = p.talento_desempeno!, pot = p.talento_potencial!;
+    const idx = getBoxIndex(pot, des);
+    const col = idx % 3, row = Math.floor(idx / 3);
+    // Límites de la celda (centro del badge)
+    const minX = col * cw + BADGE_R + 2, maxX = (col + 1) * cw - BADGE_R - 2;
+    const minY = row * ch + TITLE_PAD + BADGE_R, maxY = (row + 1) * ch - BADGE_R - 2;
+    const { x, y } = toCoords(des, pot);
+    // Semilla mínima (ángulo áureo) para que puntos idénticos puedan separarse
+    const ang = i * 2.39996;
+    return {
+      id: p.id, minX, maxX, minY, maxY,
+      x: (x / 100) * w + Math.cos(ang) * 0.5,
+      y: h - (y / 100) * h + Math.sin(ang) * 0.5,
+    };
+  });
+  const clamp = (n: typeof nodos[number]) => {
+    n.x = Math.min(Math.max(n.x, n.minX), Math.max(n.minX, n.maxX));
+    n.y = Math.min(Math.max(n.y, n.minY), Math.max(n.minY, n.maxY));
   };
+  nodos.forEach(clamp);
+  for (let iter = 0; iter < 120; iter++) {
+    let movido = false;
+    for (let i = 0; i < nodos.length; i++) {
+      for (let j = i + 1; j < nodos.length; j++) {
+        const a = nodos[i], b = nodos[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let d = Math.hypot(dx, dy);
+        if (d >= MIN_DIST) continue;
+        if (d < 0.01) { dx = 1; dy = 0; d = 1; }
+        // Cada uno se aleja la mitad de lo que falta
+        const push = (MIN_DIST - d) / 2 / d;
+        a.x -= dx * push; a.y -= dy * push;
+        b.x += dx * push; b.y += dy * push;
+        clamp(a); clamp(b);
+        movido = true;
+      }
+    }
+    if (!movido) break;
+  }
+  return new Map(nodos.map(n => [n.id, { left: n.x, top: n.y }]));
 }
 
 interface Persona {
@@ -114,6 +167,16 @@ export function MatrizTalentoClient() {
   const [loading,      setLoading]      = useState(true);
   const [grupoActivo,  setGrupoActivo]  = useState("dg");
   const [error,        setError]        = useState<string | null>(null);
+  // Tamaño real de la grilla, para separar los badges en píxeles
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [gridSize, setGridSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setGridSize({ w: e.contentRect.width, h: e.contentRect.height }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [loading]);
 
   useEffect(() => {
     createAnyClient()
@@ -220,19 +283,18 @@ export function MatrizTalentoClient() {
                 </div>
 
                 {/* Capa 2: badges posicionados por coordenadas reales */}
-                <div className="absolute inset-0">
-                  {conDatos.map(p => {
-                    const { x, y } = toCoords(p.talento_desempeno!, p.talento_potencial!);
-                    const { dx, dy } = jitter(p.id);
+                <div ref={gridRef} className="absolute inset-0">
+                  {gridSize.w > 0 && (() => { const pos = calcularPosiciones(conDatos, gridSize.w, gridSize.h); return conDatos.map(p => {
+                    const { left, top } = pos.get(p.id)!;
                     return (
                       <div
                         key={p.id}
                         title={`${p.nombre} ${p.apellido} · D:${p.talento_desempeno} P:${p.talento_potencial} · ${p.cargo_actual ?? "Sin cargo"}`}
                         className="absolute w-7 h-7 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/30 cursor-default transition-transform hover:scale-110 z-10"
                         style={{
-                          left:      `${x}%`,
-                          bottom:    `${y}%`,
-                          transform: `translateX(calc(-50% + ${dx}px)) translateY(calc(50% + ${dy}px))`,
+                          left:      `${left}px`,
+                          top:       `${top}px`,
+                          transform: "translate(-50%, -50%)",
                           background: COLORES_CARGO[p.cargo_actual ?? ""] ?? COLOR_DEFAULT,
                         }}
                       >
@@ -241,7 +303,7 @@ export function MatrizTalentoClient() {
                         </span>
                       </div>
                     );
-                  })}
+                  }); })()}
                 </div>
               </div>
             </div>

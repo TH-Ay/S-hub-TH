@@ -98,12 +98,14 @@ interface Props {
   ocultarInfoRestringida?: boolean;
   /** Badge Referente: solo visible si el usuario actual es admin */
   isAdmin?: boolean;
+  /** Oculta la línea Apalancador / Referente / tiempo en la empresa (rol TI) */
+  ocultarLineaPerfil?: boolean;
   /** Ignorado — mantenido para compatibilidad con llamadores existentes */
   anchorX?: number;
   anchorY?: number;
 }
 
-export function PersonaResumenModal({ personaId, onClose, simulationSnapshot, ocultarMatriz = false, ocultarCarga = false, ocultarApalancador = false, ocultarInfoRestringida = false, isAdmin = false }: Props) {
+export function PersonaResumenModal({ personaId, onClose, simulationSnapshot, ocultarMatriz = false, ocultarCarga = false, ocultarApalancador = false, ocultarInfoRestringida = false, isAdmin = false, ocultarLineaPerfil = false }: Props) {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [resumen, setResumen] = useState<ResumenData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -260,7 +262,8 @@ export function PersonaResumenModal({ personaId, onClose, simulationSnapshot, oc
         <div className="overflow-y-auto px-4 pb-8 flex-1 min-h-0">
           {!loading && persona && resumen && (
             <div className="space-y-2.5 text-sm">
-              {(persona.is_leverager || (persona.referente && isAdmin) || diasEnEmpresa(persona.fecha_ingreso)) && (
+              {/* Línea Apalancador / Referente / antigüedad: oculta para TI */}
+              {!ocultarLineaPerfil && (persona.is_leverager || (persona.referente && isAdmin) || diasEnEmpresa(persona.fecha_ingreso)) && (
                 <div className="flex items-center gap-2 pb-1.5 border-b border-gray-100 flex-wrap">
                   {persona.is_leverager && !ocultarApalancador && (
                     <div className="flex items-center gap-1">

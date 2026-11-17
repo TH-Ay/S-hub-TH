@@ -52,14 +52,14 @@ const navItems: { section: string; items: NavItem[] }[] = [
   {
     section: "Principal",
     items: [
-      { href: "/inicio",      label: "Inicio",    icon: Home,            allowedRoles: ["admin", "personas", "GyD", "AySr", "proposer", "planificador"] },
-      { href: "/tablero",     label: "Tablero",   icon: LayoutDashboard, allowedRoles: ["admin", "personas", "GyD", "AySr", "Desarrollo", "proposer", "planificador"] },
-      { href: "/engagements", label: "Proyectos", icon: Briefcase,       allowedRoles: ["admin", "personas", "AySr", "proposer", "planificador", "GyD"] },
+      { href: "/inicio",      label: "Inicio",    icon: Home,            allowedRoles: ["admin", "personas", "TI", "GyD", "AySr", "proposer", "planificador"] },
+      { href: "/tablero",     label: "Tablero",   icon: LayoutDashboard, allowedRoles: ["admin", "personas", "TI", "GyD", "AySr", "Desarrollo", "proposer", "planificador"] },
+      { href: "/engagements", label: "Proyectos", icon: Briefcase,       allowedRoles: ["admin", "personas", "TI", "AySr", "proposer", "planificador", "GyD"] },
       { href: "/personas",    label: "Personas",  icon: Users,           allowedRoles: ["personas"] }, // exclusivo rol Personas
-      { href: "/ausencias",   label: "Ausencias", icon: CalendarOff,     allowedRoles: ["admin", "personas", "GyD", "AySr", "Desarrollo", "proposer", "planificador"] },
-      { href: "/alertas",     label: "Alertas",   icon: Bell,            allowedRoles: ["admin", "personas", "proposer"] },
+      { href: "/ausencias",   label: "Ausencias", icon: CalendarOff,     allowedRoles: ["admin", "personas", "TI", "GyD", "AySr", "Desarrollo", "proposer", "planificador"] },
+      { href: "/alertas",     label: "Alertas",   icon: Bell,            allowedRoles: ["admin", "personas", "TI", "proposer"] },
       { href: "/anotaciones", label: "Anotaciones", icon: Notebook,      allowedRoles: ["personas"] },
-      { href: "/reportes",    label: "Reportes",  icon: BarChart2,       allowedRoles: ["admin", "personas", "proposer"] },
+      { href: "/reportes",    label: "Reportes",  icon: BarChart2,       allowedRoles: ["admin", "personas", "TI", "proposer"] },
     ],
   },
   {
@@ -68,8 +68,8 @@ const navItems: { section: string; items: NavItem[] }[] = [
       // Planificación está desactivada temporalmente (ver app/(dashboard)/planificacion/page.tsx)
       { href: "/planificacion", label: "Planificación", icon: Kanban,      allowedRoles: ["admin", "planificador"] },
       { href: "/capacity",      label: "Capacity",       icon: BarChart3,   allowedRoles: ["admin", "personas"] },
-      { href: "/accesos",       label: "Accesos",        icon: ShieldCheck, allowedRoles: ["admin", "personas"] },
-      { href: "/configuracion", label: "Configuración",  icon: Settings,    allowedRoles: ["admin", "personas"] },
+      { href: "/accesos",       label: "Accesos",        icon: ShieldCheck, allowedRoles: ["admin", "personas", "TI"] },
+      { href: "/configuracion", label: "Configuración",  icon: Settings,    allowedRoles: ["admin", "personas", "TI"] },
     ],
   },
 ];
@@ -255,7 +255,7 @@ export function Sidebar({
                   {nombreCompleto}
                 </p>
                 <p className="text-[10px] text-[#a0a8c0] truncate">
-                  {rol === "admin" ? "Admin" : rol === "personas" ? "Personas" : rol === "GyD" ? "G&D" : rol === "AySr" ? "A&Sr" : rol === "Desarrollo" ? "Desarrollo" : cargo ?? "Equipo"}
+                  {rol === "admin" ? "Admin" : rol === "personas" ? "Personas" : rol === "TI" ? "TI" : rol === "GyD" ? "G&D" : rol === "AySr" ? "A&Sr" : rol === "Desarrollo" ? "Desarrollo" : cargo ?? "Equipo"}
                 </p>
               </div>
               {/* Logout */}

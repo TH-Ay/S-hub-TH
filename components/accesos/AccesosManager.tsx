@@ -16,11 +16,13 @@ import { Button } from "@/components/ui/Button";
 import { Modal, ConfirmDialog } from "@/components/ui/Modal";
 import { FieldWrapper, Select } from "@/components/ui/FormField";
 import { CARGO_COLORS, CARGO_COLOR_DEFAULT } from "@/lib/constants";
+import { esTI } from "@/lib/roles";
 import type { Persona, RolSistema, EstadoAcceso } from "@/lib/types/database";
 
 const ROL_OPTIONS = [
   { value: "admin",          label: "Admin" },
   { value: "personas",       label: "Personas" },
+  { value: "TI",             label: "TI" },
   { value: "GyD",            label: "G&D" },
   { value: "AySr",           label: "A&Sr" },
   { value: "Desarrollo",     label: "Desarrollo" },
@@ -31,6 +33,7 @@ const ROL_OPTIONS = [
 const DESCRIPCION_ROL: Record<string, string> = {
   admin:        "acceso total: gestiona accesos, personas, proyectos y configuración.",
   personas:     "acceso total, igual que Admin, más las anotaciones de todo el equipo.",
+  TI:           "igual que Admin, pero sin Capacity, Matriz de Talento, Dotación por mes ni Descargables.",
   GyD:          "solo lectura; no ve el % de ocupación por equipo ni las vacaciones por confirmar.",
   AySr:         "solo lectura; no ve asignaciones ni vacaciones \"por confirmar\".",
   Desarrollo:   "solo lectura, con información sensible oculta.",
@@ -56,6 +59,8 @@ export function AccesosManager() {
   const [loading, setLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [miId, setMiId] = useState<string | null>(null);
+  // TI no puede agregar accesos (arranca oculto hasta saber el rol)
+  const [soyTI, setSoyTI] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -99,10 +104,11 @@ export function AccesosManager() {
       if (!user) return;
       const { data } = await sb
         .from("persona")
-        .select("id")
+        .select("id, rol_sistema")
         .eq("auth_user_id", user.id)
         .single();
       setMiId(data?.id ?? null);
+      setSoyTI(esTI(data?.rol_sistema));
     })();
   }, [load]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -177,10 +183,12 @@ export function AccesosManager() {
             {accesos.length} persona{accesos.length !== 1 ? "s" : ""} con acceso al sistema
           </p>
         </div>
+        {!soyTI && (
         <Button size="sm" onClick={() => { setFeedback(null); setModalOpen(true); }}>
           <Plus className="w-3.5 h-3.5" />
           Agregar acceso
         </Button>
+        )}
       </div>
 
       {feedback && (

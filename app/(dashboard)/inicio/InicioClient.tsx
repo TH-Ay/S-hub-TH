@@ -18,7 +18,7 @@ import { PanelFitAsignacion } from "@/components/engagements/PanelFitAsignacion"
 import { PersonaResumenModal } from "@/components/personas/PersonaResumenModal";
 import { NavegadorFechas } from "@/components/ui/NavegadorFechas";
 import type { Persona } from "@/lib/types/database";
-import { esAdmin } from "@/lib/roles";
+import { esAdmin, esTI } from "@/lib/roles";
 
 const JERARQUIA_CARGOS = [
   "Socio", "Director de Proyectos", "Director", "Gerente de Proyectos", "Gerente",
@@ -364,6 +364,8 @@ export function InicioClient() {
           <div className="flex items-center justify-between mb-3 flex-shrink-0">
             <div className="flex items-center gap-1.5">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Equipo</p>
+              {/* TI no ve % de carga, A ni R */}
+              {!esTI(rol) && (
               <button
                 onClick={() => setMostrarCarga((s) => !s)}
                 title={mostrarCarga ? "Ocultar % de carga" : "Mostrar % de carga"}
@@ -371,6 +373,7 @@ export function InicioClient() {
               >
                 {mostrarCarga ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
               </button>
+              )}
             </div>
             <div className="flex items-center gap-0.5">
               {equipoEstado === "expandido" ? (
@@ -441,7 +444,7 @@ export function InicioClient() {
                               cargo_actual: p.cargo_actual,
                             }))}
                             onClick={() => abrirResumen(p)}
-                            title={`${p.nombre} ${p.apellido} — ${pct}% ocupado${!isReadOnly && p.is_leverager ? " · Apalancador" : ""}`}
+                            title={esTI(rol) ? `${p.nombre} ${p.apellido}` : `${p.nombre} ${p.apellido} — ${pct}% ocupado${!isReadOnly && p.is_leverager ? " · Apalancador" : ""}`}
                             className="flex flex-col items-center gap-0.5 hover:scale-110 transition-transform cursor-grab active:cursor-grabbing"
                           >
                             <div className="relative">
@@ -451,18 +454,18 @@ export function InicioClient() {
                               >
                                 {iniciales(p.nombre, p.apellido, p.iniciales)}
                               </div>
-                              {mostrarCarga && !isReadOnly && p.is_leverager && (
+                              {mostrarCarga && !esTI(rol) && !isReadOnly && p.is_leverager && (
                                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#3b5bdb] border-2 border-white flex items-center justify-center text-white font-bold leading-none" style={{ fontSize: 7 }}>
                                   A
                                 </span>
                               )}
-                              {mostrarCarga && esAdmin(rol) && p.referente && (
+                              {mostrarCarga && !esTI(rol) && esAdmin(rol) && p.referente && (
                                 <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#e2884a] border-2 border-white flex items-center justify-center text-white font-bold leading-none" style={{ fontSize: 7 }}>
                                   R
                                 </span>
                               )}
                             </div>
-                            {mostrarCarga && rol !== "GyD" && rol !== "AySr" && (
+                            {mostrarCarga && !esTI(rol) && rol !== "GyD" && rol !== "AySr" && (
                               <span
                                 className="text-[9px] font-bold px-1 py-0.5 rounded-full leading-none"
                                 style={{ background: oc.bg, color: oc.text }}
@@ -485,11 +488,12 @@ export function InicioClient() {
             <PersonaResumenModal
               personaId={seleccionada.id}
               onClose={() => setSeleccionada(null)}
-              ocultarMatriz={rol === "planificador" || rol === "GyD" || rol === "AySr"}
-              ocultarCarga={rol === "GyD" || rol === "AySr" || rol === "planificador"}
-              ocultarApalancador={rol === "GyD" || rol === "AySr" || rol === "planificador" || rol === "Desarrollo"}
+              ocultarMatriz={rol === "planificador" || rol === "GyD" || rol === "AySr" || esTI(rol)}
+              ocultarCarga={rol === "GyD" || rol === "AySr" || rol === "planificador" || esTI(rol)}
+              ocultarApalancador={rol === "GyD" || rol === "AySr" || rol === "planificador" || rol === "Desarrollo" || esTI(rol)}
               ocultarInfoRestringida={rol === "planificador" || rol === "GyD" || rol === "AySr"}
               isAdmin={esAdmin(rol)}
+              ocultarLineaPerfil={esTI(rol)}
             />
           )}
         </div>
@@ -527,7 +531,7 @@ export function InicioClient() {
               onAsignacionChange={isReadOnly ? undefined : refreshOcupacion}
               onOpenPanel={isReadOnly ? undefined : abrirPanel}
               externalReloadKey={tableroReloadKey}
-              ocultarPctEquipo={rol === null || rol === "GyD" || rol === "AySr" || rol === "planificador" || rol === "Desarrollo"}
+              ocultarPctEquipo={rol === null || rol === "GyD" || rol === "AySr" || rol === "planificador" || rol === "Desarrollo" || rol === "TI"}
               ocultarPorConfirmar={rol === "AySr"}
               isAdmin={esAdmin(rol)}
               vistaResumida={vistaResumida}

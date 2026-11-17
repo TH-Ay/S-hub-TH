@@ -8,12 +8,13 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getPersonasResguardoInfo } from "@/lib/queries/personas";
 import { getAnotaciones, getAnotacionFolders } from "@/lib/queries/anotaciones";
 import { buildExcelPersonasResguardo } from "@/lib/utils/excel-resguardo-personas";
-import { esAdmin } from "@/lib/roles";
+import { esAdmin, esTI } from "@/lib/roles";
 
 export async function POST() {
   // Datos de personas: solo roles admin y "personas" (usa service client, sin RLS)
   const authUser = await requireAuth();
-  if (!esAdmin(authUser.rol)) {
+  // TI es admin, pero no descarga datos sensibles de personas
+  if (!esAdmin(authUser.rol) || esTI(authUser.rol)) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
