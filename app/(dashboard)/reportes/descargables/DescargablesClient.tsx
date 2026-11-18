@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { descargarResumenAnual } from "../resumen-anual-personas/datos";
 
 function descargarBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -46,6 +47,7 @@ export function DescargablesClient({ ocultarInfoPersonas = false }: { ocultarInf
   const anio = new Date().getFullYear();
   const [loadingPersonas, setLoadingPersonas] = useState(false);
   const [loadingStaffing, setLoadingStaffing] = useState(false);
+  const [loadingAnual, setLoadingAnual] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function descargar(url: string, filename: string, setLoading: (v: boolean) => void) {
@@ -99,6 +101,22 @@ export function DescargablesClient({ ocultarInfoPersonas = false }: { ocultarInf
             descargar("/api/reportes/resumen-proyectos-excel", `Respaldo Staffing ${anio}.xlsx`, setLoadingStaffing)
           }
         />
+        {/* Excel generado en el navegador (mismo del reporte); oculto para TI como el reporte */}
+        {!ocultarInfoPersonas && (
+        <DescargableCard
+          titulo={`Resumen anual staffing por persona ${anio}`}
+          descripcion="Semanas del año por persona y proyecto, con ausencias y color por cargo"
+          botonLabel="Descargar Resumen anual"
+          loading={loadingAnual}
+          onDescargar={async () => {
+            setLoadingAnual(true);
+            setError(null);
+            try { await descargarResumenAnual(anio); }
+            catch (e) { setError(e instanceof Error ? e.message : "Error al generar el Excel"); }
+            finally { setLoadingAnual(false); }
+          }}
+        />
+        )}
       </div>
     </div>
   );
