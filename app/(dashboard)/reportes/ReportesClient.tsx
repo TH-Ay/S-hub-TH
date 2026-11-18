@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart2, Grid2X2, Layers, CalendarClock, Download } from "lucide-react";
+import { BarChart2, Grid2X2, CalendarClock, CalendarRange, Download } from "lucide-react";
 import Link from "next/link";
 import { ReportCard } from "@/components/reportes/ReportCard";
 import { TalentMatrixPreview } from "@/components/reportes/TalentMatrixPreview";
 import { ResumenProyectosPreview } from "@/components/reportes/ResumenProyectosPreview";
+import { ResumenAnualPreview } from "@/components/reportes/ResumenAnualPreview";
+import { DotacionMesPreview } from "@/components/reportes/DotacionMesPreview";
 import { createClient, createAnyClient } from "@/lib/supabase/client";
 import type { RolSistema } from "@/lib/types/database";
 import { esAdmin, esTI } from "@/lib/roles";
@@ -32,17 +34,6 @@ const REPORTES = [
     href: "/reportes/resumen-proyectos",
   },
   {
-    id: "capacity-proyectos",
-    titulo: "Capacity de Proyectos",
-    categoria: "Recursos",
-    icon: Layers,
-    iconColor: "#0ea5e9",
-    iconBg: "bg-[#f0fbff]",
-    href: "/reportes/capacity-proyectos",
-    // TI no ve reportes de capacity
-    allowedRoles: ["admin", "personas", "proposer"] as RolSistema[],
-  },
-  {
     id: "capacity-snapshot",
     titulo: "Dotación por Mes (Snapshot)",
     categoria: "Recursos",
@@ -51,6 +42,17 @@ const REPORTES = [
     iconBg: "bg-[#f0fbff]",
     href: "/reportes/capacity-snapshot",
     // TI no ve la dotación por mes
+    allowedRoles: ["admin", "personas", "proposer"] as RolSistema[],
+  },
+  {
+    id: "resumen-anual-personas",
+    titulo: "Resumen anual staffing por persona",
+    categoria: "Recursos",
+    icon: CalendarRange,
+    iconColor: "#4a90e2",
+    iconBg: "bg-[#f0f6ff]",
+    href: "/reportes/resumen-anual-personas",
+    // TI no ve reportes de staffing por persona
     allowedRoles: ["admin", "personas", "proposer"] as RolSistema[],
   },
 ];
@@ -108,9 +110,11 @@ export function ReportesClient() {
               preview={
                 r.id === "matriz-talento" ? <TalentMatrixPreview />
                 : r.id === "resumen-proyectos" ? <ResumenProyectosPreview />
+                : r.id === "resumen-anual-personas" ? <ResumenAnualPreview />
+                : r.id === "capacity-snapshot" ? <DotacionMesPreview />
                 : undefined
               }
-              previewClassName={r.id === "matriz-talento" ? "h-[220px]" : r.id === "resumen-proyectos" ? "h-[180px]" : "h-40"}
+              previewClassName={r.id === "matriz-talento" ? "h-[220px]" : r.id === "resumen-proyectos" || r.id === "resumen-anual-personas" || r.id === "capacity-snapshot" ? "h-[180px]" : "h-40"}
             />
           ))}
         </div>
