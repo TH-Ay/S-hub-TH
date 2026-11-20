@@ -1,8 +1,8 @@
 /**
  * Genera el Excel "Resumen anual staffing por persona" en el navegador (exceljs).
  */
-import type { GrupoCargo, SemanaAnual } from "./modelo";
-import { MESES, aclarar, colorCargo, tramosMeses } from "./modelo";
+import type { FilaDetalle, GrupoCargo, SemanaAnual } from "./modelo";
+import { MESES, aclarar, colorCargo, fechaDisplay, tramosMeses } from "./modelo";
 import { CARGOS } from "@/lib/constants";
 
 /** "#4a90e2" → "FF4A90E2" (formato exceljs) */
@@ -13,7 +13,7 @@ const COLOR_AUSENCIA = "FF22A45D"; // semana con ausencia
 
 const relleno = (argb: string) => ({ type: "pattern" as const, pattern: "solid" as const, fgColor: { argb } });
 
-export async function exportarResumenAnual(anio: number, semanas: SemanaAnual[], grupos: GrupoCargo[]) {
+export async function exportarResumenAnual(anio: number, semanas: SemanaAnual[], grupos: GrupoCargo[], filaDetalle: FilaDetalle[] = []) {
   const ExcelJS = (await import("exceljs")).default; // carga diferida: solo al descargar
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet(`Staffing ${anio}`, { views: [{ state: "frozen", xSplit: 1, ySplit: 3 }] });
@@ -91,6 +91,60 @@ export async function exportarResumenAnual(anio: number, semanas: SemanaAnual[],
   }
   ws.getCell(fila, 1).value = "Ausencia (ver nota de la celda)";
   ws.getCell(fila, 2).fill = relleno(COLOR_AUSENCIA);
+
+  // ── Hoja "Detalle" ──────────────────────────────────────────────────────────
+  if (filaDetalle.length > 0) {
+    const wd = wb.addWorksheet("Detalle", { views: [{ state: "frozen", xSplit: 0, ySplit: 2 }] });
+    wd.getColumn(1).width = 12; // Código
+    wd.getColumn(2).width = 46; // Nombre Proyecto
+    wd.getColumn(3).width = 28; // Nombre Persona
+    wd.getColumn(4).width = 16; // Fecha Inicio
+    wd.getColumn(5).width = 16; // Fecha Término
+
+    // Fila 1: título
+    wd.getCell(1, 1).value = `Detalle de engagements por persona — ${anio}`;
+    wd.getCell(1, 1).font = { bold: true, size: 13 };
+    wd.mergeCells(1, 1, 1, 5);
+
+    // Fila 2: encabezados
+    const encabezados = ["Código", "Nombre Proyecto", "Nombre Persona", "Fecha Inicio", "Fecha Término"];
+    encabezados.forEach((v, i) => {
+      const cell = wd.getCell(2, i + 1);
+      cell.value = v;
+      cell.fill = relleno("FF1A1A2E");
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
+      cell.alignment = { horizontal: "left" };
+    });
+
+    let fd = 3;
+    let personaActual = "";
+    for (const f of filaDetalle) {
+      // Fila agrupadora de persona (cada vez que cambia)
+      if (f.nombrePersona !== personaActual) {
+        personaActual = f.nombrePersona;
+        const rP = wd.getRow(fd++);
+        rP.getCell(1).value = `${f.nombrePersona}  —  ${f.cargo}`;
+        rP.getCell(1).font = { bold: true, size: 10 };
+        for (let c = 1; c <= 5; c++) rP.getCell(c).fill = relleno(COLOR_PERSONA);
+        wd.mergeCells(fd - 1, 1, fd - 1, 5);
+      }
+      const r = wd.getRow(fd++);
+      r.getCell(1).value = f.codigoProyecto ?? "";
+      r.getCell(1).alignment = { indent: 2 };
+      r.getCell(1).font = { size: 9 };
+      r.getCell(2).value = f.nombreProyecto;
+      r.getCell(2).font = { size: 9 };
+      r.getCell(3).value = f.nombrePersona;
+      r.getCell(3).font = { size: 9 };
+      r.getCell(4).value = fechaDisplay(f.fechaInicio);
+      r.getCell(4).font = { size: 9 };
+      r.getCell(5).value = fechaDisplay(f.fechaFin);
+      r.getCell(5).font = { size: 9 };
+      r.border = {
+        bottom: { style: "thin", color: { argb: "FFE8E8E8" } },
+      };
+    }
+  }
 
   const buffer = await wb.xlsx.writeBuffer();
   const url = URL.createObjectURL(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));

@@ -4,7 +4,7 @@
  */
 import { createAnyClient } from "@/lib/supabase/client";
 import type { AsigAnual, AusenciaAnual, CargoHistorial, SemanaAnual } from "./modelo";
-import { construirGrupos, semanasDelAnio } from "./modelo";
+import { construirDetalle, construirGrupos, semanasDelAnio } from "./modelo";
 import { exportarResumenAnual } from "./exportarExcel";
 
 const PAGINA = 1000; // límite de filas por consulta de Supabase
@@ -73,5 +73,6 @@ export async function descargarResumenAnual(anio: number) {
   ]);
   const labels = new Map(((tipos ?? []) as { id: string; label: string }[]).map((t) => [t.id, t.label]));
   const grupos = construirGrupos(asigs, semanas, ausencias, labels, historial);
-  await exportarResumenAnual(anio, semanas, grupos);
+  const filaDetalle = construirDetalle(asigs, semanas);
+  await exportarResumenAnual(anio, semanas, grupos, filaDetalle);
 }

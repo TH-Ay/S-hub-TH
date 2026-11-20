@@ -127,6 +127,87 @@ function nombreProyecto(e: NonNullable<AsigAnual["engagement"]>): string {
   return e.codigo ? `${e.codigo} · ${e.nombre}` : e.nombre;
 }
 
+export interface FilaDetalle {
+  codigoProyecto: string | null;
+  nombreProyecto: string;
+  nombrePersona: string;
+  cargo: string;
+  fechaInicio: string;   // yyyy-MM-dd
+  fechaFin: string | null; // null = sin fecha fin definida
+}
+
+/** Fecha yyyy-MM-dd → dd/MM/yyyy */
+export const fechaDisplay = (f: string | null): string =>
+  f ? f.split("-").reverse().join("/") : "—";
+
+/**
+ * Construye el listado de detalle: una fila por (persona × engagement),
+ * con la fecha de inicio más temprana y la fecha fin más tardía de todas
+ * las asignaciones de esa persona en ese engagement.
+ * Ordenado: cargo → persona → fecha_inicio.
+ */
+export function construirDetalle(asigs: AsigAnual[], semanas: SemanaAnual[]): FilaDetalle[] {
+  const desde = semanas[0].inicio;
+  const hasta = semanas[semanas.length - 1].fin;
+
+  // Agrupar por (persona_id, engagement_id)
+  const mapa = new Map<string, {
+    codigoProyecto: string | null;
+    nombreProyecto: string;
+    nombrePersona: string;
+    cargo: string;
+    minInicio: string;
+    maxFin: string | null; // null = abierta
+  }>();
+
+  for (const a of asigs) {
+    if (!a.persona || !a.engagement || a.engagement.is_deleted) continue;
+    // Solo asignaciones que toquen el año
+    const fin = a.fecha_fin ?? "9999-12-31";
+    if (a.fecha_inicio > hasta || fin < desde) continue;
+
+    const key = `${a.persona_id}__${a.engagement_id}`;
+    const existing = mapa.get(key);
+    const finReal = a.fecha_fin; // null si es abierta
+    if (!existing) {
+      mapa.set(key, {
+        codigoProyecto: a.engagement.codigo ?? null,
+        nombreProyecto: a.engagement.nombre,
+        nombrePersona: `${a.persona.nombre} ${a.persona.apellido}`.trim(),
+        cargo: a.persona.cargo_actual ?? "Sin cargo",
+        minInicio: a.fecha_inicio,
+        maxFin: finReal,
+      });
+    } else {
+      if (a.fecha_inicio < existing.minInicio) existing.minInicio = a.fecha_inicio;
+      // Si alguna es abierta → la combinación es abierta
+      if (finReal === null) {
+        existing.maxFin = null;
+      } else if (existing.maxFin !== null && finReal > existing.maxFin) {
+        existing.maxFin = finReal;
+      }
+    }
+  }
+
+  const orden = [...CARGOS] as string[];
+  const rango = (c: string) => (orden.indexOf(c) === -1 ? orden.length : orden.indexOf(c));
+
+  return [...mapa.values()]
+    .map((v) => ({
+      codigoProyecto: v.codigoProyecto,
+      nombreProyecto: v.nombreProyecto,
+      nombrePersona: v.nombrePersona,
+      cargo: v.cargo,
+      fechaInicio: v.minInicio,
+      fechaFin: v.maxFin,
+    }))
+    .sort((a, b) =>
+      rango(a.cargo) - rango(b.cargo) ||
+      a.nombrePersona.localeCompare(b.nombrePersona) ||
+      a.fechaInicio.localeCompare(b.fechaInicio),
+    );
+}
+
 /** Construye los grupos ordenados por jerarquía de cargo (Socio → Desarrollo) */
 export function construirGrupos(
   asigs: AsigAnual[],
